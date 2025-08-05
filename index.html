@@ -1,270 +1,252 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sales Dashboard</title>
+    <title>Dual-Store Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f8f9fa;
             line-height: 1.6;
         }
-        
-        /* Login Container */
-        .login-container {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .login-container h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        
-        .login-container input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        .login-container button {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        
-        .login-container button:hover {
-            background-color: #2980b9;
-        }
-        
-        #loginError {
-            color: red;
-            margin-top: 10px;
-            min-height: 20px;
-        }
-        
-        /* Dashboard (hidden by default) */
-        #dashboardSection {
-            display: none;
-        }
-        
-        .dashboard {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            overflow-x: auto;
-        }
-        
         h1 {
             color: #2c3e50;
             text-align: center;
             margin-bottom: 30px;
         }
-        
+        .store-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .store-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .store-title.one-stop { color: #3498db; }
+        .store-title.golden { color: #e67e22; }
+        .store-total {
+            font-weight: 500;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
-        
         th, td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        
         th {
-            background-color: #3498db;
+            background-color: #2c3e50;
             color: white;
-            font-weight: bold;
+            font-weight: 500;
         }
-        
         tr:hover {
             background-color: #f5f5f5;
         }
-        
         .zero {
-            color: #999;
+            color: #95a5a6;
         }
-        
-        .profit-positive {
+        .profit {
             color: #27ae60;
+            font-weight: 500;
         }
-        
-        .total-row {
+        .combined-total {
+            background-color: #f2f7fa;
             font-weight: bold;
-            background-color: #f2f2f2;
+            font-size: 1.1em;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
         }
-        
         @media (max-width: 600px) {
-            th, td {
-                padding: 8px;
-                font-size: 14px;
+            .store-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
-            
-            .login-container {
-                padding: 20px;
-                margin: 20px auto;
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Login Section (Visible by default) -->
-    <div id="loginSection" class="login-container">
-        <h2>Sales Dashboard Login</h2>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="checkLogin()">Enter Dashboard</button>
-        <p id="loginError"></p>
-    </div>
-
-    <!-- Dashboard Section (Hidden until login) -->
-    <div id="dashboardSection">
-        <div class="dashboard">
-            <h1>📊 Daily Sales Report</h1>
-            <table id="salesTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Sales</th>
-                        <th>Gross Profit</th>
-                        <th>Profit Margin</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-                <tfoot id="tableFooter"></tfoot>
-            </table>
+    <h1>🏪 Dual-Store Dashboard</h1>
+    
+    <div class="store-section">
+        <div class="store-header">
+            <div class="store-title one-stop">One Stop Store</div>
+            <div class="store-total">Total: <span id="oneStopTotal">-</span></div>
         </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sales</th>
+                    <th>Gross Profit</th>
+                    <th>Margin</th>
+                </tr>
+            </thead>
+            <tbody id="oneStopBody"></tbody>
+        </table>
+    </div>
+    
+    <div class="store-section">
+        <div class="store-header">
+            <div class="store-title golden">Golden Store</div>
+            <div class="store-total">Total: <span id="goldenTotal">-</span></div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sales</th>
+                    <th>Gross Profit</th>
+                    <th>Margin</th>
+                </tr>
+            </thead>
+            <tbody id="goldenBody"></tbody>
+        </table>
+    </div>
+    
+    <div class="combined-total">
+        Combined Total: 
+        <span id="combinedSales">Sales: -</span> | 
+        <span id="combinedProfit">Profit: -</span> |
+        <span id="combinedMargin">Margin: -</span>
     </div>
 
     <script>
-        // Demo credentials (replace with your own)
-        const VALID_CREDENTIALS = {
-            username: "glam",
-            password: "pos123" // Change this!
-        };
-
-        function checkLogin() {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
-            const errorElement = document.getElementById("loginError");
-            
-            if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
-                // Successful login
-                document.getElementById("loginSection").style.display = "none";
-                document.getElementById("dashboardSection").style.display = "block";
-                loadDashboard();
-            } else {
-                // Failed login
-                errorElement.textContent = "Invalid username or password";
-                document.getElementById("password").value = "";
-            }
-        }
-
-        function loadDashboard() {
-            fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
-                .then(response => {
-                    if (!response.ok) throw new Error("Network response was not ok");
-                    return response.json();
-                })
+        // Your Apps Script URL (same sheet for both stores)
+        const SHEET_URL = "https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec";
+        
+        // Global totals
+        let oneStop = { sales: 0, profit: 0 };
+        let golden = { sales: 0, profit: 0 };
+        
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch(SHEET_URL)
+                .then(response => response.json())
                 .then(data => {
-                    const tableBody = document.getElementById("tableBody");
-                    const tableFooter = document.getElementById("tableFooter");
-                    tableBody.innerHTML = "";
-                    tableFooter.innerHTML = "";
-                    
-                    let totalSales = 0;
-                    let totalProfit = 0;
-                    
-                    // Skip header row if exists
                     const rows = Array.isArray(data) ? data.slice(1) : [];
-                    
-                    rows.forEach(row => {
-                        const [dateStr, sales, profit] = row;
-                        const salesNum = Number(sales.toString().replace(/,/g, '')) || 0;
-                        const profitNum = Number(profit.toString().replace(/,/g, '')) || 0;
-                        
-                        totalSales += salesNum;
-                        totalProfit += profitNum;
-                        
-                        // Format date (e.g., "1 Aug 2024")
-                        const date = new Date(dateStr);
-                        const formattedDate = date.toLocaleDateString('en-US', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        });
-                        
-                        const profitMargin = salesNum > 0 ? 
-                            (profitNum / salesNum * 100).toFixed(1) + '%' : 'N/A';
-                        
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${formattedDate}</td>
-                            <td class="${salesNum === 0 ? 'zero' : ''}">${formatCurrency(salesNum)}</td>
-                            <td class="${profitNum === 0 ? 'zero' : profitNum > 0 ? 'profit-positive' : ''}">
-                                ${formatCurrency(profitNum)}
-                            </td>
-                            <td>${profitMargin}</td>
-                        `;
-                        tableBody.appendChild(tr);
-                    });
-                    
-                    // Add totals row
-                    const tr = document.createElement("tr");
-                    tr.className = "total-row";
-                    tr.innerHTML = `
-                        <td>Total</td>
-                        <td>${formatCurrency(totalSales)}</td>
-                        <td>${formatCurrency(totalProfit)}</td>
-                        <td>${totalSales > 0 ? (totalProfit / totalSales * 100).toFixed(1) + '%' : 'N/A'}</td>
-                    `;
-                    tableFooter.appendChild(tr);
+                    renderData(rows);
                 })
                 .catch(error => {
-                    document.getElementById("tableBody").innerHTML = `
+                    document.getElementById("oneStopBody").innerHTML = `
+                        <tr><td colspan="4" style="color:red;text-align:center;">Error: ${error.message}</td></tr>
+                    `;
+                });
+        });
+        
+        function renderData(rows) {
+            const oneStopBody = document.getElementById("oneStopBody");
+            const goldenBody = document.getElementById("goldenBody");
+            oneStopBody.innerHTML = '';
+            goldenBody.innerHTML = '';
+            
+            rows.forEach(row => {
+                const [dateStr, sales1, profit1, sales2, profit2] = row;
+                
+                // Format date
+                const date = new Date(dateStr);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short'
+                });
+                
+                // One Stop Store data
+                if (sales1) {
+                    const sales1Num = cleanNumber(sales1);
+                    const profit1Num = cleanNumber(profit1);
+                    oneStop.sales += sales1Num;
+                    oneStop.profit += profit1Num;
+                    
+                    oneStopBody.innerHTML += `
                         <tr>
-                            <td colspan="4" style="color: red; text-align: center;">
-                                Error loading data: ${error.message}
-                            </td>
+                            <td>${formattedDate}</td>
+                            <td>${formatCurrency(sales1Num)}</td>
+                            <td class="profit">${formatCurrency(profit1Num)}</td>
+                            <td>${calcMargin(sales1Num, profit1Num)}</td>
                         </tr>
                     `;
-                    console.error("Fetch error:", error);
-                });
-        }
-
-        function formatCurrency(num) {
-            return num.toLocaleString('en-US', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
+                }
+                
+                // Golden Store data
+                if (sales2) {
+                    const sales2Num = cleanNumber(sales2);
+                    const profit2Num = cleanNumber(profit2);
+                    golden.sales += sales2Num;
+                    golden.profit += profit2Num;
+                    
+                    goldenBody.innerHTML += `
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${formatCurrency(sales2Num)}</td>
+                            <td class="profit">${formatCurrency(profit2Num)}</td>
+                            <td>${calcMargin(sales2Num, profit2Num)}</td>
+                        </tr>
+                    `;
+                }
             });
+            
+            // Update totals
+            updateTotals();
         }
-
-        // Allow login on Enter key
-        document.getElementById("password").addEventListener("keyup", function(event) {
-            if (event.key === "Enter") {
-                checkLogin();
-            }
-        });
+        
+        function updateTotals() {
+            // Store totals
+            document.getElementById("oneStopTotal").innerHTML = `
+                Sales: ${formatCurrency(oneStop.sales)} | 
+                Profit: <span class="profit">${formatCurrency(oneStop.profit)}</span> |
+                Margin: ${calcMargin(oneStop.sales, oneStop.profit)}
+            `;
+            
+            document.getElementById("goldenTotal").innerHTML = `
+                Sales: ${formatCurrency(golden.sales)} | 
+                Profit: <span class="profit">${formatCurrency(golden.profit)}</span> |
+                Margin: ${calcMargin(golden.sales, golden.profit)}
+            `;
+            
+            // Combined totals
+            const totalSales = oneStop.sales + golden.sales;
+            const totalProfit = oneStop.profit + golden.profit;
+            
+            document.getElementById("combinedSales").textContent = `Sales: ${formatCurrency(totalSales)}`;
+            document.getElementById("combinedProfit").textContent = `Profit: ${formatCurrency(totalProfit)}`;
+            document.getElementById("combinedMargin").textContent = `Margin: ${calcMargin(totalSales, totalProfit)}`;
+        }
+        
+        // Helper functions
+        function cleanNumber(num) {
+            return Number(num.toString().replace(/,/g, '')) || 0;
+        }
+        
+        function formatCurrency(num) {
+            return num.toLocaleString('en-US');
+        }
+        
+        function calcMargin(sales, profit) {
+            return sales > 0 ? `${(profit / sales * 100).toFixed(1)}%` : '-';
+        }
     </script>
 </body>
 </html>
