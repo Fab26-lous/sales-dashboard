@@ -4,64 +4,48 @@
     <title>Sales Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
+        /* Previous styles remain the same */
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
             padding: 20px;
-            background-color: #f8f9fa;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .dashboard {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            overflow-x: auto;
+            text-align: center;
         }
-        table {
+        .login-container input {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
+        .login-container button {
+            width: 100%;
+            padding: 10px;
             background-color: #3498db;
             color: white;
-            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-        .zero {
-            color: #999;
-        }
-        .profit-positive {
-            color: #27ae60;
-        }
-        .total-row {
-            font-weight: bold;
-            background-color: #f2f2f2;
-        }
-        @media (max-width: 600px) {
-            th, td {
-                padding: 8px;
-                font-size: 14px;
-            }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="dashboard">
+    <div id="loginSection" class="login-container">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="checkLogin()">Enter Dashboard</button>
+        <p id="loginError" style="color: red;"></p>
+    </div>
+
+    <div id="dashboardSection" class="hidden">
+       <div class="dashboard">
         <h1>📊 Daily Sales Report</h1>
         <table id="salesTable">
             <thead>
@@ -77,9 +61,30 @@
         </table>
     </div>
 
+    </div>
+
     <script>
-        fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
-            .then(response => response.json())
+        // Hardcoded credentials (for demo only - see warning below)
+        const VALID_USERNAME = "admin";
+        const VALID_PASSWORD = "pos123";
+
+        function checkLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            
+            if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+                document.getElementById("loginSection").classList.add("hidden");
+                document.getElementById("dashboardSection").classList.remove("hidden");
+                loadDashboard(); // Load data after login
+            } else {
+                document.getElementById("loginError").textContent = "Invalid credentials";
+            }
+        }
+
+        function loadDashboard() {
+            // Your existing fetch/data code here
+            fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
+               .then(response => response.json())
             .then(data => {
                 const tableBody = document.getElementById("tableBody");
                 const tableFooter = document.getElementById("tableFooter");
@@ -97,8 +102,7 @@
                     
                     totalSales += salesNum;
                     totalProfit += profitNum;
-                    
-                    // Format date without time (e.g., "1 Aug 2024")
+                     // Format date without time (e.g., "1 Aug 2024")
                     const date = new Date(dateStr);
                     const formattedDate = date.toLocaleDateString('en-US', {
                         day: 'numeric',
@@ -114,7 +118,7 @@
                         <td class="${salesNum === 0 ? 'zero' : ''}">${formatCurrency(salesNum)}</td>
                         <td class="${profitNum === 0 ? 'zero' : profitNum > 0 ? 'profit-positive' : ''}">${formatCurrency(profitNum)}</td>
                         <td>${profitMargin}</td>
-                    `;
+                        ;
                     tableBody.appendChild(tr);
                 });
                 
@@ -126,7 +130,7 @@
                     <td>${formatCurrency(totalSales)}</td>
                     <td>${formatCurrency(totalProfit)}</td>
                     <td>${totalSales > 0 ? (totalProfit / totalSales * 100).toFixed(1) + '%' : 'N/A'}</td>
-                `;
+            ;
                 tableFooter.appendChild(tr);
             })
             .catch(error => {
@@ -142,6 +146,7 @@
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             });
+
         }
     </script>
 </body>
