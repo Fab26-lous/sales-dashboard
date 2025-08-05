@@ -1,17 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dual-Store Dashboard</title>
+    <title>Protected Dual-Store Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-            line-height: 1.6;
+        /* Password Screen Styles */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f1f5f9;
         }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .login-title {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .login-btn:hover {
+            background-color: #2980b9;
+        }
+        .error-msg {
+            color: #e74c3c;
+            margin-top: 10px;
+            height: 20px;
+            font-size: 14px;
+        }
+
+        /* Dashboard Styles (hidden by default) */
+        #dashboard {
+            display: none;
+        }
+        body.logged-in {
+            background-color: #f8f9fa;
+        }
+        body.logged-in #dashboard {
+            display: block;
+        }
+        body.logged-in .login-screen {
+            display: none;
+        }
+
+        /* Your existing dashboard styles */
         h1 {
             color: #2c3e50;
             text-align: center;
@@ -75,6 +134,15 @@
             padding: 15px;
             border-radius: 6px;
         }
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 20px;
+        }
         @media (max-width: 600px) {
             .store-header {
                 flex-direction: column;
@@ -89,61 +157,115 @@
     </style>
 </head>
 <body>
-    <h1>🏪 Dual-Store Dashboard</h1>
-    
-    <div class="store-section">
-        <div class="store-header">
-            <div class="store-title one-stop">One Stop Store</div>
-            <div class="store-total">Total: <span id="oneStopTotal">-</span></div>
+    <!-- Password Protection Screen -->
+    <div class="login-screen">
+        <div class="login-box">
+            <div class="login-title">Store Dashboard Login</div>
+            <input type="password" id="passwordInput" class="login-input" placeholder="Enter password">
+            <button class="login-btn" onclick="checkPassword()">Unlock Dashboard</button>
+            <div class="error-msg" id="loginError"></div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Sales</th>
-                    <th>Gross Profit</th>
-                    <th>Margin</th>
-                </tr>
-            </thead>
-            <tbody id="oneStopBody"></tbody>
-        </table>
     </div>
-    
-    <div class="store-section">
-        <div class="store-header">
-            <div class="store-title golden">Golden Store</div>
-            <div class="store-total">Total: <span id="goldenTotal">-</span></div>
+
+    <!-- Dashboard Content (Hidden until unlocked) -->
+    <div id="dashboard">
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button class="logout-btn" onclick="logout()">Lock Dashboard</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Sales</th>
-                    <th>Gross Profit</th>
-                    <th>Margin</th>
-                </tr>
-            </thead>
-            <tbody id="goldenBody"></tbody>
-        </table>
-    </div>
-    
-    <div class="combined-total">
-        Combined Total: 
-        <span id="combinedSales">Sales: -</span> | 
-        <span id="combinedProfit">Profit: -</span> |
-        <span id="combinedMargin">Margin: -</span>
+        
+        <h1>🏪 Dual-Store Dashboard</h1>
+        
+        <div class="store-section">
+            <div class="store-header">
+                <div class="store-title one-stop">One Stop Store</div>
+                <div class="store-total">Total: <span id="oneStopTotal">-</span></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Sales</th>
+                        <th>Gross Profit</th>
+                        <th>Margin</th>
+                    </tr>
+                </thead>
+                <tbody id="oneStopBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="store-section">
+            <div class="store-header">
+                <div class="store-title golden">Golden Store</div>
+                <div class="store-total">Total: <span id="goldenTotal">-</span></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Sales</th>
+                        <th>Gross Profit</th>
+                        <th>Margin</th>
+                    </tr>
+                </thead>
+                <tbody id="goldenBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="combined-total">
+            Combined Total: 
+            <span id="combinedSales">Sales: -</span> | 
+            <span id="combinedProfit">Profit: -</span> |
+            <span id="combinedMargin">Margin: -</span>
+        </div>
     </div>
 
     <script>
-        // Your Apps Script URL (same sheet for both stores)
+        // ===== PASSWORD PROTECTION ===== //
+        // Change this password (keep it simple for frontend-only protection)
+        const APP_PASSWORD = "pos123"; 
+        
+        // Check password
+        function checkPassword() {
+            const input = document.getElementById("passwordInput").value;
+            const errorElement = document.getElementById("loginError");
+            
+            if (input === APP_PASSWORD) {
+                // Successful login
+                document.body.classList.add("logged-in");
+                sessionStorage.setItem("unlocked", "true");
+                loadDashboardData();
+            } else {
+                // Failed attempt
+                errorElement.textContent = "Incorrect password";
+                document.getElementById("passwordInput").value = "";
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem("unlocked");
+            document.body.classList.remove("logged-in");
+            document.getElementById("passwordInput").value = "";
+        }
+        
+        // Check if already unlocked
+        if (sessionStorage.getItem("unlocked") === "true") {
+            document.body.classList.add("logged-in");
+            loadDashboardData();
+        }
+        
+        // Allow Enter key to submit password
+        document.getElementById("passwordInput").addEventListener("keyup", function(e) {
+            if (e.key === "Enter") checkPassword();
+        });
+
+        // ===== DASHBOARD FUNCTIONALITY ===== //
         const SHEET_URL = "https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec";
         
-        // Global totals
         let oneStop = { sales: 0, profit: 0 };
         let golden = { sales: 0, profit: 0 };
         
-        // Load data when page loads
-        document.addEventListener('DOMContentLoaded', () => {
+        function loadDashboardData() {
             fetch(SHEET_URL)
                 .then(response => response.json())
                 .then(data => {
@@ -155,7 +277,7 @@
                         <tr><td colspan="4" style="color:red;text-align:center;">Error: ${error.message}</td></tr>
                     `;
                 });
-        });
+        }
         
         function renderData(rows) {
             const oneStopBody = document.getElementById("oneStopBody");
@@ -163,53 +285,47 @@
             oneStopBody.innerHTML = '';
             goldenBody.innerHTML = '';
             
+            // Reset totals
+            oneStop = { sales: 0, profit: 0 };
+            golden = { sales: 0, profit: 0 };
+            
             rows.forEach(row => {
                 const [dateStr, sales1, profit1, sales2, profit2] = row;
+                const formattedDate = formatDate(dateStr);
                 
-                // Format date
-                const date = new Date(dateStr);
-                const formattedDate = date.toLocaleDateString('en-US', {
-                    day: 'numeric',
-                    month: 'short'
-                });
-                
-                // One Stop Store data
+                // Process One Stop data
                 if (sales1) {
                     const sales1Num = cleanNumber(sales1);
                     const profit1Num = cleanNumber(profit1);
                     oneStop.sales += sales1Num;
                     oneStop.profit += profit1Num;
                     
-                    oneStopBody.innerHTML += `
-                        <tr>
-                            <td>${formattedDate}</td>
-                            <td>${formatCurrency(sales1Num)}</td>
-                            <td class="profit">${formatCurrency(profit1Num)}</td>
-                            <td>${calcMargin(sales1Num, profit1Num)}</td>
-                        </tr>
-                    `;
+                    oneStopBody.innerHTML += createTableRow(formattedDate, sales1Num, profit1Num);
                 }
                 
-                // Golden Store data
+                // Process Golden Store data
                 if (sales2) {
                     const sales2Num = cleanNumber(sales2);
                     const profit2Num = cleanNumber(profit2);
                     golden.sales += sales2Num;
                     golden.profit += profit2Num;
                     
-                    goldenBody.innerHTML += `
-                        <tr>
-                            <td>${formattedDate}</td>
-                            <td>${formatCurrency(sales2Num)}</td>
-                            <td class="profit">${formatCurrency(profit2Num)}</td>
-                            <td>${calcMargin(sales2Num, profit2Num)}</td>
-                        </tr>
-                    `;
+                    goldenBody.innerHTML += createTableRow(formattedDate, sales2Num, profit2Num);
                 }
             });
             
-            // Update totals
             updateTotals();
+        }
+        
+        function createTableRow(date, sales, profit) {
+            return `
+                <tr>
+                    <td>${date}</td>
+                    <td>${formatCurrency(sales)}</td>
+                    <td class="profit">${formatCurrency(profit)}</td>
+                    <td>${calcMargin(sales, profit)}</td>
+                </tr>
+            `;
         }
         
         function updateTotals() {
@@ -246,6 +362,14 @@
         
         function calcMargin(sales, profit) {
             return sales > 0 ? `${(profit / sales * 100).toFixed(1)}%` : '-';
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'short'
+            });
         }
     </script>
 </body>
