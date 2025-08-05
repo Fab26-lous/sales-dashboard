@@ -1,31 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sales Dashboard</title>
+    <title>Sales Dashboard Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
             background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
         h1 {
             color: #2c3e50;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
-        .dashboard {
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .dashboard-card {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 20px;
-            overflow-x: auto;
+            margin-bottom: 20px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
         th, td {
             padding: 12px 15px;
@@ -36,6 +48,8 @@
             background-color: #3498db;
             color: white;
             font-weight: bold;
+            position: sticky;
+            top: 0;
         }
         tr:hover {
             background-color: #f5f5f5;
@@ -50,7 +64,30 @@
             font-weight: bold;
             background-color: #f2f2f2;
         }
-        @media (max-width: 600px) {
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 30px;
+        }
+        input, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
             th, td {
                 padding: 8px;
                 font-size: 14px;
@@ -59,81 +96,214 @@
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <h1>📊 Daily Sales Report</h1>
-        <table id="salesTable">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Sales</th>
-                    <th>Gross Profit</th>
-                    <th>Profit Margin</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-            <tfoot id="tableFooter"></tfoot>
-        </table>
+    <div class="container">
+        <h1>📈 Sales Analytics Dashboard</h1>
+        
+        <div class="dashboard-card">
+            <div class="controls">
+                <input type="date" id="startDate">
+                <input type="date" id="endDate">
+                <button onclick="filterData()">Apply Filter</button>
+                <button onclick="resetFilter()">Reset</button>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="dashboard-card">
+            <table id="salesTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Sales</th>
+                        <th>Gross Profit</th>
+                        <th>Profit Margin</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot id="tableFooter"></tfoot>
+            </table>
+        </div>
     </div>
 
     <script>
-        fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
-            .then(response => response.json())
-            .then(data => {
-                const tableBody = document.getElementById("tableBody");
-                const tableFooter = document.getElementById("tableFooter");
+        let allData = []; // Store original data
+        let salesChart; // Chart instance
+
+        // Initialize with default dates (last 7 days)
+        document.addEventListener('DOMContentLoaded', function() {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(end.getDate() - 7);
+            
+            document.getElementById('startDate').valueAsDate = start;
+            document.getElementById('endDate').valueAsDate = end;
+            
+            fetchData();
+        });
+
+        function fetchData() {
+            fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
+                .then(response => response.json())
+                .then(data => {
+                    allData = Array.isArray(data) ? data.slice(1) : []; // Remove header
+                    processData(allData);
+                })
+                .catch(handleError);
+        }
+
+        function processData(data) {
+            const tableBody = document.getElementById("tableBody");
+            const tableFooter = document.getElementById("tableFooter");
+            tableBody.innerHTML = '';
+            tableFooter.innerHTML = '';
+            
+            let totalSales = 0;
+            let totalProfit = 0;
+            const chartData = {
+                dates: [],
+                sales: [],
+                profits: []
+            };
+
+            data.forEach(row => {
+                const [dateStr, sales, profit] = row;
+                const date = new Date(dateStr);
+                const salesNum = Number(sales.toString().replace(/,/g, ''));
+                const profitNum = Number(profit.toString().replace(/,/g, ''));
                 
-                // Skip header row if your data includes it
-                const rows = Array.isArray(data) ? data.slice(1) : [];
+                totalSales += salesNum;
+                totalProfit += profitNum;
                 
-                let totalSales = 0;
-                let totalProfit = 0;
+                const profitMargin = salesNum > 0 ? (profitNum / salesNum * 100).toFixed(1) + '%' : 'N/A';
                 
-                rows.forEach(row => {
-                    const [date, sales, profit] = row;
-                    const salesNum = Number(sales.toString().replace(/,/g, ''));
-                    const profitNum = Number(profit.toString().replace(/,/g, ''));
-                    
-                    totalSales += salesNum;
-                    totalProfit += profitNum;
-                    
-                    const profitMargin = salesNum > 0 ? (profitNum / salesNum * 100).toFixed(1) + '%' : 'N/A';
-                    
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${date}</td>
-                        <td class="${salesNum === 0 ? 'zero' : ''}">${formatCurrency(salesNum)}</td>
-                        <td class="${profitNum === 0 ? 'zero' : profitNum > 0 ? 'profit-positive' : ''}">${formatCurrency(profitNum)}</td>
-                        <td>${profitMargin}</td>
-                    `;
-                    tableBody.appendChild(tr);
+                // Format date without time
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
                 });
-                
-                // Add totals row
+
+                chartData.dates.push(formattedDate);
+                chartData.sales.push(salesNum);
+                chartData.profits.push(profitNum);
+
                 const tr = document.createElement("tr");
-                tr.className = "total-row";
                 tr.innerHTML = `
-                    <td>Total</td>
-                    <td>${formatCurrency(totalSales)}</td>
-                    <td>${formatCurrency(totalProfit)}</td>
-                    <td>${totalSales > 0 ? (totalProfit / totalSales * 100).toFixed(1) + '%' : 'N/A'}</td>
+                    <td>${formattedDate}</td>
+                    <td class="${salesNum === 0 ? 'zero' : ''}">${formatCurrency(salesNum)}</td>
+                    <td class="${profitNum === 0 ? 'zero' : profitNum > 0 ? 'profit-positive' : ''}">${formatCurrency(profitNum)}</td>
+                    <td>${profitMargin}</td>
                 `;
-                tableFooter.appendChild(tr);
-            })
-            .catch(error => {
-                document.getElementById("tableBody").innerHTML = `
-                    <tr>
-                        <td colspan="4" style="color: red; text-align: center;">Error loading data: ${error.message}</td>
-                    </tr>
-                `;
+                tableBody.appendChild(tr);
             });
-        
+
+            // Totals row
+            const tr = document.createElement("tr");
+            tr.className = "total-row";
+            tr.innerHTML = `
+                <td>Total</td>
+                <td>${formatCurrency(totalSales)}</td>
+                <td>${formatCurrency(totalProfit)}</td>
+                <td>${totalSales > 0 ? (totalProfit / totalSales * 100).toFixed(1) + '%' : 'N/A'}</td>
+            `;
+            tableFooter.appendChild(tr);
+
+            updateChart(chartData);
+        }
+
+        function updateChart(chartData) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            if (salesChart) salesChart.destroy();
+            
+            salesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.dates,
+                    datasets: [
+                        {
+                            label: 'Sales',
+                            data: chartData.sales,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Profit',
+                            data: chartData.profits,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            type: 'line',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Sales ($)' }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            title: { display: true, text: 'Profit ($)' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterData() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            
+            const filtered = allData.filter(row => {
+                const rowDate = new Date(row[0]);
+                return rowDate >= startDate && rowDate <= endDate;
+            });
+            
+            processData(filtered);
+        }
+
+        function resetFilter() {
+            processData(allData);
+            const end = new Date();
+            const start = new Date();
+            start.setDate(end.getDate() - 7);
+            document.getElementById('startDate').valueAsDate = start;
+            document.getElementById('endDate').valueAsDate = end;
+        }
+
+        function handleError(error) {
+            document.getElementById("tableBody").innerHTML = `
+                <tr>
+                    <td colspan="4" style="color: red; text-align: center;">Error: ${error.message}</td>
+                </tr>
+            `;
+            console.error(error);
+        }
+
         function formatCurrency(num) {
             return num.toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
-            }).replace('$', ''); // Removes $ symbol for cleaner look
+            });
         }
     </script>
 </body>
