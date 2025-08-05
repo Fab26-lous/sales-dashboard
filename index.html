@@ -2,25 +2,139 @@
 <html>
 <head>
     <title>Sales Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: monospace; margin: 20px; }
-        pre { background: #f0f0f0; padding: 10px; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .dashboard {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .zero {
+            color: #999;
+        }
+        .profit-positive {
+            color: #27ae60;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+        @media (max-width: 600px) {
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Sales Data</h1>
-    <pre id="data">Loading...</pre>
-    <script>
-        // Paste your Google Apps Script Web App URL below:
+    <div class="dashboard">
+        <h1>📊 Daily Sales Report</h1>
+        <table id="salesTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sales</th>
+                    <th>Gross Profit</th>
+                    <th>Profit Margin</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+            <tfoot id="tableFooter"></tfoot>
+        </table>
+    </div>
 
-      fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
-  .then(response => response.json())
-  .then(data => {
-    document.getElementById("data").textContent = JSON.stringify(data, null, 2);
-  })
-  .catch(error => {
-    document.getElementById("data").textContent = "Error: " + error;
-  });
+    <script>
+        fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById("tableBody");
+                const tableFooter = document.getElementById("tableFooter");
+                
+                // Skip header row if your data includes it
+                const rows = Array.isArray(data) ? data.slice(1) : [];
+                
+                let totalSales = 0;
+                let totalProfit = 0;
+                
+                rows.forEach(row => {
+                    const [date, sales, profit] = row;
+                    const salesNum = Number(sales.toString().replace(/,/g, ''));
+                    const profitNum = Number(profit.toString().replace(/,/g, ''));
+                    
+                    totalSales += salesNum;
+                    totalProfit += profitNum;
+                    
+                    const profitMargin = salesNum > 0 ? (profitNum / salesNum * 100).toFixed(1) + '%' : 'N/A';
+                    
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${date}</td>
+                        <td class="${salesNum === 0 ? 'zero' : ''}">${formatCurrency(salesNum)}</td>
+                        <td class="${profitNum === 0 ? 'zero' : profitNum > 0 ? 'profit-positive' : ''}">${formatCurrency(profitNum)}</td>
+                        <td>${profitMargin}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+                
+                // Add totals row
+                const tr = document.createElement("tr");
+                tr.className = "total-row";
+                tr.innerHTML = `
+                    <td>Total</td>
+                    <td>${formatCurrency(totalSales)}</td>
+                    <td>${formatCurrency(totalProfit)}</td>
+                    <td>${totalSales > 0 ? (totalProfit / totalSales * 100).toFixed(1) + '%' : 'N/A'}</td>
+                `;
+                tableFooter.appendChild(tr);
+            })
+            .catch(error => {
+                document.getElementById("tableBody").innerHTML = `
+                    <tr>
+                        <td colspan="4" style="color: red; text-align: center;">Error loading data: ${error.message}</td>
+                    </tr>
+                `;
+            });
+        
+        function formatCurrency(num) {
+            return num.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).replace('$', ''); // Removes $ symbol for cleaner look
+        }
     </script>
 </body>
 </html>
