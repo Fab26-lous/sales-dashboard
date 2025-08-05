@@ -13,16 +13,13 @@
     <script>
         // Paste your Google Apps Script Web App URL below:
 
-       fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
-  .then(response => {
-    if (!response.ok) throw new Error("Network error");
-    return response.json();
-  })
+      fetch("https://script.google.com/macros/s/AKfycbxV0Tg1Yhjp3Pn_QWyVXVbm72YHxodS2jqbzuo39jaSD6gnp1Qw9EDJGaNfRD9q7sLu/exec")
+  .then(response => response.json())
   .then(data => {
     document.getElementById("data").textContent = JSON.stringify(data, null, 2);
   })
   .catch(error => {
-    document.getElementById("data").textContent = "Error: " + error.message;
+    document.getElementById("data").textContent = "Error: " + error;
   });
     </script>
 </body>
