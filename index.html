@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales Dashboard</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        pre { background: #f0f0f0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Sales Data</h1>
+    <pre id="data">Loading...</pre>
+    <script>
+        // Paste your Google Apps Script Web App URL below:
+        const WEB_APP_URL = "https://script.google.com/...";
+
+        fetch(WEB_APP_URL)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("data").textContent = 
+                    JSON.stringify(data, null, 2); // Formats JSON neatly
+            })
+            .catch(error => {
+                document.getElementById("data").textContent = "Error: " + error;
+            });
+    </script>
+</body>
+</html>
