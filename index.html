@@ -12,17 +12,18 @@
     <pre id="data">Loading...</pre>
     <script>
         // Paste your Google Apps Script Web App URL below:
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyHuwXxpaQx91nUYaibW9vrxAHPSYzteSmnZ8M_-4iIrYmWvEASTpw-0ojMnC_OAsC7/exec";
 
-        fetch(WEB_APP_URL)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("data").textContent = 
-                    JSON.stringify(data, null, 2); // Formats JSON neatly
-            })
-            .catch(error => {
-                document.getElementById("data").textContent = "Error: " + error;
-            });
+       fetch("https://script.google.com/macros/s/AKfycbxIeTCOpPkE5ym5I9IJ0y2C4mhSvNCu_0nRJ62ARdZ0P1oYD0VLGlN99LMuwW-ceE5d/exec")
+  .then(response => {
+    if (!response.ok) throw new Error("Network error");
+    return response.json();
+  })
+  .then(data => {
+    document.getElementById("data").textContent = JSON.stringify(data, null, 2);
+  })
+  .catch(error => {
+    document.getElementById("data").textContent = "Error: " + error.message;
+  });
     </script>
 </body>
 </html>
